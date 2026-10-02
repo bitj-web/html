@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로 스마트 메모장 스튜디오 - Pro Notepad Studio</title>
+    
+    <!-- Fonts: Inter, JetBrains Mono, Noto Serif KR, OpenDyslexic fallback -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+                        serif: ['Noto Serif KR', 'Georgia', 'serif'],
+                        dyslexic: ['Comic Sans MS', 'Arial', 'sans-serif']
+                    },
+                    colors: {
+                        studio: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            700: '#334155',
+                            800: '#1e293b',
+                            850: '#172033',
+                            900: '#0f172a',
+                            950: '#080d1a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Editor styling */
+        .editor-container {
+            font-family: inherit;
+        }
+
+        /* Custom Theme Overrides */
+        body.theme-cyberpunk {
+            background-color: #0d0221 !important;
+            color: #00f0ff !important;
+        }
+        body.theme-cyberpunk header, 
+        body.theme-cyberpunk aside, 
+        body.theme-cyberpunk #tabsBar,
+        body.theme-cyberpunk #toolBar {
+            background-color: #1a0840 !important;
+            border-color: #ff007f !important;
+        }
+
+        body.theme-forest {
+            background-color: #0c1c14 !important;
+            color: #e2f1e7 !important;
+        }
+        body.theme-forest header, 
+        body.theme-forest aside, 
+        body.theme-forest #tabsBar,
+        body.theme-forest #toolBar {
+            background-color: #142a1e !important;
+            border-color: #2a523a !important;
+        }
+
+        body.theme-sepia {
+            background-color: #f4ebd9 !important;
+            color: #433422 !important;
+        }
+        body.theme-sepia header, 
+        body.theme-sepia aside, 
+        body.theme-sepia #tabsBar,
+        body.theme-sepia #toolBar {
+            background-color: #e8dcc4 !important;
+            border-color: #d3c2a3 !important;
+        }
+
+        /* Markdown Styling */
+        .markdown-body h1 { font-size: 1.875rem; font-weight: 700; border-bottom: 1px solid rgba(156, 163, 175, 0.3); padding-bottom: 0.5rem; margin: 1rem 0; }
+        .markdown-body h2 { font-size: 1.5rem; font-weight: 600; border-bottom: 1px solid rgba(156, 163, 175, 0.2); padding-bottom: 0.3rem; margin: 0.875rem 0; }
+        .markdown-body h3 { font-size: 1.25rem; font-weight: 600; margin: 0.75rem 0; }
+        .markdown-body p { margin-bottom: 0.75rem; line-height: 1.7; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; opacity: 0.85; font-style: italic; margin-bottom: 0.75rem; }
+        .markdown-body code { background: rgba(100, 116, 139, 0.2); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.875em; }
+        .markdown-body pre { background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; margin-bottom: 0.75rem; }
+        .markdown-body pre code { background: transparent; padding: 0; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .markdown-body th, .markdown-body td { border: 1px solid rgba(156, 163, 175, 0.3); padding: 0.5rem 0.75rem; text-align: left; }
+        .markdown-body th { background: rgba(100, 116, 139, 0.15); }
+        .markdown-body hr { border: 0; height: 1px; background: rgba(156, 163, 175, 0.3); margin: 1.5rem 0; }
+        .markdown-body input[type="checkbox"] { margin-right: 0.5rem; }
+
+        .active-tab {
+            border-bottom: 2px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6 !important;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .pulse-status {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-studio-50 dark:bg-studio-950 text-gray-800 dark:text-gray-100 font-sans h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- TOP HEADER / RIBBON BAR -->
+    <header class="bg-white dark:bg-studio-900 border-b border-gray-200 dark:border-studio-800 h-12 flex items-center justify-between px-3 shrink-0 z-30">
+        <div class="flex items-center space-x-3">
+            <button id="btnToggleSidebar" class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-studio-800 rounded-lg transition" title="사이드바 열기/닫기">
+                <i class="fa-solid fa-bars text-sm"></i>
+            </button>
+
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-2 font-bold text-base tracking-tight text-gray-800 dark:text-white">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-note-sticky text-xs"></i>
+                </div>
+                <span>스마트 노트 스튜디오</span>
+                <span class="text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/20 px-1.5 py-0.5 rounded-full font-mono font-medium">ULTRA</span>
+            </div>
+
+            <div class="h-4 w-[1px] bg-gray-200 dark:bg-studio-800 mx-1"></div>
+
+            <!-- Quick Actions Toolbar -->
+            <div class="hidden md:flex items-center space-x-1">
+                <button id="btnNewNote" class="px-2.5 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition flex items-center space-x-1 shadow-sm">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>새 메모</span>
+                </button>
+                <button id="btnSaveCurrent" class="px-2.5 py-1 text-xs hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-700 dark:text-gray-300 rounded-md transition flex items-center space-x-1">
+                    <i class="fa-solid fa-floppy-disk text-blue-500"></i>
+                    <span>저장 (Ctrl+S)</span>
+                </button>
+                <label class="px-2.5 py-1 text-xs hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-700 dark:text-gray-300 rounded-md cursor-pointer transition flex items-center space-x-1">
+                    <i class="fa-solid fa-folder-open text-amber-500"></i>
+                    <span>가져오기</span>
+                    <input type="file" id="inputFileImport" accept=".txt,.md,.json,.html" class="hidden">
+                </label>
+                <button id="btnExportFile" class="px-2.5 py-1 text-xs hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-700 dark:text-gray-300 rounded-md transition flex items-center space-x-1">
+                    <i class="fa-solid fa-file-export text-emerald-500"></i>
+                    <span>내보내기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Side Utility Controls -->
+        <div class="flex items-center space-x-2 text-xs">
+            <!-- Snapshots / History Button -->
+            <button id="btnSnapshots" class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-700 dark:text-gray-300 rounded-md transition flex items-center space-x-1" title="문서 스냅샷 / 복원">
+                <i class="fa-solid fa-clock-rotate-left text-purple-400"></i>
+                <span class="hidden sm:inline">버전 이력</span>
+            </button>
+
+            <div class="h-4 w-[1px] bg-gray-200 dark:bg-studio-800"></div>
+
+            <!-- Sticky Notes Floating Toggle -->
+            <button id="btnToggleSticky" class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-studio-800 rounded-lg transition" title="스티키 메모지">
+                <i class="fa-solid fa-sticky-note text-amber-400"></i>
+            </button>
+
+            <!-- Zen Mode -->
+            <button id="btnZenMode" class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-studio-800 rounded-lg transition" title="몰입(Zen) 풀스크린 모드">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+
+            <!-- Settings Modal Trigger -->
+            <button id="btnSettings" class="p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-studio-800 rounded-lg transition" title="설정 및 테마">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE LAYOUT CONTAINER -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- SIDEBAR: File Explorer & Folder Navigation -->
+        <aside id="sidebar" class="w-80 bg-white dark:bg-studio-900 border-r border-gray-200 dark:border-studio-800 flex flex-col transition-all duration-300 z-20 shrink-0">
+            
+            <!-- Sidebar Header & Search -->
+            <div class="p-3 border-b border-gray-200 dark:border-studio-800 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">문서 탐색기</span>
+                    <div class="flex items-center space-x-1">
+                        <button id="btnSidebarNewNote" class="p-1 hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-500 rounded" title="새 문서">
+                            <i class="fa-solid fa-file-circle-plus text-xs"></i>
+                        </button>
+                        <button id="btnSidebarNewFolder" class="p-1 hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-500 rounded" title="새 폴더">
+                            <i class="fa-solid fa-folder-plus text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                    <input type="text" id="inputSearchNotes" placeholder="노트 제목 또는 내용 검색..." class="w-full pl-8 pr-3 py-1.5 bg-gray-100 dark:bg-studio-800/80 text-xs rounded-lg border border-transparent focus:border-blue-500 dark:text-gray-200 outline-none transition">
+                </div>
+
+                <!-- Filters Bar -->
+                <div class="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] font-medium">
+                    <button class="filter-btn active-filter px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap" data-filter="all">전체</button>
+                    <button class="filter-btn px-2 py-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-500 whitespace-nowrap" data-filter="markdown">마크다운</button>
+                    <button class="filter-btn px-2 py-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-500 whitespace-nowrap" data-filter="fav">즐겨찾기</button>
+                    <button class="filter-btn px-2 py-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-studio-800 text-gray-500 whitespace-nowrap" data-filter="trash">휴지통</button>
+                </div>
+            </div>
+
+            <!-- Notes & Folders Tree Container -->
+            <div id="fileTreeContainer" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <!-- Dynamically Rendered File Tree Items -->
+            </div>
+
+            <!-- Templates Library Drawer Toggle -->
+            <div class="p-2 border-t border-gray-200 dark:border-studio-800 bg-gray-50 dark:bg-studio-900/50">
+                <button id="btnOpenTemplates" class="w-full py-1.5 px-2 bg-white dark:bg-studio-800 hover:bg-gray-100 dark:hover:bg-studio-700 border border-gray-200 dark:border-studio-700 rounded-md text-xs text-gray-700 dark:text-gray-300 font-medium flex items-center justify-center space-x-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-box-archive text-purple-400"></i>
+                    <span>서식 문서 템플릿 창고</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN EDITOR WORKSPACE -->
+        <main class="flex-1 flex flex-col bg-white dark:bg-studio-950 overflow-hidden relative">
+            
+            <!-- TABS BAR -->
+            <div class="bg-gray-100 dark:bg-studio-900 border-b border-gray-200 dark:border-studio-800 flex items-center overflow-x-auto shrink-0 select-none" id="tabsBar">
+                <!-- Dynamic Editor Tabs -->
+            </div>
+
+            <!-- TOOLBAR & EDITOR HEADER -->
+            <div id="toolBar" class="bg-white dark:bg-studio-900 border-b border-gray-200 dark:border-studio-800 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-10">
+                
+                <!-- Document Title Input & Type Selector -->
+                <div class="flex items-center space-x-2 flex-1 min-w-[200px]">
+                    <i id="docTypeIcon" class="fa-solid fa-file-lines text-blue-500 text-sm"></i>
+                    <input type="text" id="inputDocTitle" placeholder="제목 없는 문서" class="font-bold text-sm bg-transparent outline-none border-b border-transparent focus:border-blue-500 text-gray-800 dark:text-gray-100 w-full max-w-xs transition">
+                    
+                    <select id="selectDocLang" class="text-xs bg-gray-100 dark:bg-studio-800 border border-gray-200 dark:border-studio-700 rounded-md px-2 py-0.5 outline-none text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
+                        <option value="markdown">마크다운 (.md)</option>
+                        <option value="plaintext">일반 텍스트 (.txt)</option>
+                    </select>
+
+                    <button id="btnFavToggle" class="text-gray-400 hover:text-amber-400 transition text-sm" title="즐겨찾기">
+                        <i class="fa-regular fa-star" id="starIcon"></i>
+                    </button>
+                </div>
+
+                <!-- Text Formatting Toolbar -->
+                <div class="flex items-center space-x-1 text-xs">
+                    
+                    <div class="flex items-center space-x-0.5 bg-gray-100 dark:bg-studio-800 p-0.5 rounded-lg border border-gray-200 dark:border-studio-700">
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="h1" title="제목 H1"><i class="fa-solid fa-heading text-xs"></i><span class="text-[9px] font-bold">1</span></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="h2" title="제목 H2"><i class="fa-solid fa-heading text-xs"></i><span class="text-[9px] font-bold">2</span></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="bold" title="굵게 (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="italic" title="기울임 (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="strike" title="취소선"><i class="fa-solid fa-strikethrough"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="highlight" title="형광팬"><i class="fa-solid fa-highlighter text-amber-400"></i></button>
+                    </div>
+
+                    <div class="flex items-center space-x-0.5 bg-gray-100 dark:bg-studio-800 p-0.5 rounded-lg border border-gray-200 dark:border-studio-700">
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="ul" title="글머리 기호 목록"><i class="fa-solid fa-list-ul"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="ol" title="번호 목록"><i class="fa-solid fa-list-ol"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="check" title="할 일 체크리스트"><i class="fa-regular fa-square-check"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="quote" title="인용구"><i class="fa-solid fa-quote-left"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="table" title="표 삽입"><i class="fa-solid fa-table"></i></button>
+                        <button class="fmt-btn p-1.5 hover:bg-white dark:hover:bg-studio-700 rounded text-gray-600 dark:text-gray-300" data-fmt="hr" title="구분선"><i class="fa-solid fa-minus"></i></button>
+                    </div>
+
+                    <div class="h-4 w-[1px] bg-gray-200 dark:bg-studio-800"></div>
+
+                    <!-- Display View Controls -->
+                    <button id="btnToggleWordWrap" class="px-2 py-1 bg-gray-100 dark:bg-studio-800 hover:bg-gray-200 dark:hover:bg-studio-700 border border-gray-200 dark:border-studio-700 rounded-lg text-gray-700 dark:text-gray-300 transition" title="줄바꿈 설정">
+                        <i class="fa-solid fa-align-left mr-1 text-[10px]"></i>
+                        <span id="lblWrapText">줄바꿈</span>
+                    </button>
+
+                    <!-- Split View Toggle -->
+                    <button id="btnToggleMDPreview" class="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-medium rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-columns text-xs"></i>
+                        <span id="lblSplitText">나란히 보기</span>
+                    </button>
+
+                    <!-- Delete File Button -->
+                    <button id="btnDeleteFile" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition" title="삭제 / 휴지통 이동">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- DUAL EDITOR WORKSPACE -->
+            <div class="flex-1 flex overflow-hidden relative">
+                
+                <!-- MAIN TEXT EDITOR PANE -->
+                <div id="editorPanel" class="flex-1 flex overflow-hidden relative bg-white dark:bg-studio-950">
+                    
+                    <!-- Line Numbers Bar -->
+                    <div id="lineNumbers" class="w-11 py-4 pr-2 bg-gray-50 dark:bg-studio-900/40 text-gray-400 dark:text-studio-700 text-right text-xs select-none border-r border-gray-100 dark:border-studio-800/50 shrink-0 font-mono">
+                        1
+                    </div>
+
+                    <!-- Main Editable Textarea -->
+                    <textarea id="mainTextarea" class="flex-1 p-4 bg-transparent text-gray-800 dark:text-gray-100 font-sans text-sm leading-relaxed outline-none resize-none overflow-y-auto whitespace-pre-wrap" spellcheck="false" placeholder="자유롭게 노트 또는 마크다운 내용을 입력하세요..."></textarea>
+                </div>
+
+                <!-- MARKDOWN PREVIEW PANE -->
+                <div id="markdownPreviewPane" class="hidden w-1/2 p-6 overflow-y-auto bg-gray-50 dark:bg-studio-900 border-l border-gray-200 dark:border-studio-800 markdown-body text-gray-800 dark:text-gray-200 shrink-0">
+                    <!-- Rendered Live Markdown View -->
+                </div>
+
+            </div>
+
+            <!-- STATUS BAR -->
+            <footer class="bg-gray-100 dark:bg-studio-900 border-t border-gray-200 dark:border-studio-800 px-3 py-1 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between shrink-0 font-mono select-none">
+                <div class="flex items-center space-x-4">
+                    <span id="statPosition" class="flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
+                        <span>줄 1, 열 1</span>
+                    </span>
+                    <span id="statChars">0 글자</span>
+                    <span id="statWords" class="hidden sm:inline">0 단어</span>
+                    <span id="statReadTime" class="hidden md:inline">읽기 ~1분</span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <span id="statusAutoSave" class="text-emerald-500 flex items-center space-x-1">
+                        <i class="fa-solid fa-circle-check text-[9px] pulse-status"></i>
+                        <span>자동 저장됨</span>
+                    </span>
+                    <span id="statusLangName" class="bg-gray-200 dark:bg-studio-800 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">MARKDOWN</span>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- FLOATING QUICK STICKY NOTE OVERLAY -->
+    <div id="stickyNoteOverlay" class="hidden fixed bottom-12 right-6 w-72 bg-amber-100 dark:bg-amber-900/90 text-amber-900 dark:text-amber-100 rounded-xl shadow-2xl border border-amber-300 dark:border-amber-700/50 p-3 z-40 backdrop-blur-md">
+        <div class="flex justify-between items-center mb-2 pb-1 border-b border-amber-200 dark:border-amber-800/60">
+            <div class="flex items-center space-x-1.5 font-bold text-xs">
+                <i class="fa-solid fa-sticky-note text-amber-500"></i>
+                <span>빠른 스티키 메모</span>
+            </div>
+            <button id="btnCloseSticky" class="text-xs hover:text-amber-600 dark:hover:text-amber-300">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <textarea id="stickyNoteTextarea" class="w-full h-36 bg-transparent outline-none resize-none font-sans text-xs leading-relaxed" placeholder="생각나는 아이디어를 빠르게 메모해보세요..."></textarea>
+    </div>
+
+    <!-- DOCUMENT TEMPLATES MODAL -->
+    <div id="snippetModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-studio-900 border border-gray-200 dark:border-studio-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-studio-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-folder-open text-purple-500"></i>
+                    <span>서식 문서 템플릿 불러오기</span>
+                </h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 space-y-2 max-h-96 overflow-y-auto" id="snippetList">
+                <!-- Snippet List Items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- VERSION HISTORY SNAPSHOTS MODAL -->
+    <div id="snapshotsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-studio-900 border border-gray-200 dark:border-studio-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-studio-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-500"></i>
+                    <span>현재 문서 버전 스냅샷 이력</span>
+                </h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <button id="btnCreateSnapshot" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>현재 시점 스냅샷 저장하기</span>
+                </button>
+                <div class="space-y-2 max-h-64 overflow-y-auto" id="snapshotList">
+                    <!-- History Snapshot Items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS & THEMES MODAL -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-studio-900 border border-gray-200 dark:border-studio-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-studio-800 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-blue-500"></i>
+                    <span>설정 및 워크스페이스 환경</span>
+                </h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 space-y-4 text-xs">
+                <!-- Font Family Selection -->
+                <div>
+                    <label class="font-bold text-gray-700 dark:text-gray-300 block mb-1">에디터 폰트 스타일</label>
+                    <select id="selectFontFamily" class="w-full bg-gray-100 dark:bg-studio-800 border border-gray-200 dark:border-studio-700 rounded-lg p-2 text-gray-700 dark:text-gray-200 outline-none">
+                        <option value="sans">고딕 / Sans-serif (기본)</option>
+                        <option value="mono">개발자용 고정폭 / JetBrains Mono</option>
+                        <option value="serif">명조체 / Noto Serif KR</option>
+                    </select>
+                </div>
+
+                <!-- Font Size Slider -->
+                <div>
+                    <div class="flex justify-between font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        <span>글꼴 크기</span>
+                        <span id="lblFontSizeValue" class="text-blue-500 font-mono">14px</span>
+                    </div>
+                    <input type="range" id="sliderFontSize" min="12" max="28" value="14" class="w-full cursor-pointer accent-blue-500">
+                </div>
+
+                <!-- Color Themes -->
+                <div>
+                    <label class="font-bold text-gray-700 dark:text-gray-300 block mb-2">테마 모드</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="theme-btn py-2 px-3 border border-gray-300 rounded-lg bg-slate-900 text-white font-medium text-left flex items-center justify-between" data-theme="dark">
+                            <span>다크 모드</span>
+                            <i class="fa-solid fa-moon text-blue-400"></i>
+                        </button>
+                        <button class="theme-btn py-2 px-3 border border-gray-300 rounded-lg bg-slate-100 text-gray-800 font-medium text-left flex items-center justify-between" data-theme="light">
+                            <span>라이트 모드</span>
+                            <i class="fa-solid fa-sun text-amber-500"></i>
+                        </button>
+                        <button class="theme-btn py-2 px-3 border border-gray-300 rounded-lg bg-purple-950 text-cyan-300 font-medium text-left flex items-center justify-between" data-theme="cyberpunk">
+                            <span>사이버펑크</span>
+                            <i class="fa-solid fa-bolt text-pink-500"></i>
+                        </button>
+                        <button class="theme-btn py-2 px-3 border border-gray-300 rounded-lg bg-emerald-950 text-emerald-100 font-medium text-left flex items-center justify-between" data-theme="forest">
+                            <span>포레스트</span>
+                            <i class="fa-solid fa-tree text-emerald-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200 dark:border-studio-800">
+
+                <!-- Backup & Restore -->
+                <div>
+                    <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-2">전체 데이터 백업 & 복원</h4>
+                    <div class="flex space-x-2">
+                        <button id="btnBackupExport" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition flex items-center justify-center space-x-1">
+                            <i class="fa-solid fa-download"></i>
+                            <span>전체 백업 (JSON)</span>
+                        </button>
+                        <label class="flex-1 py-2 bg-gray-100 dark:bg-studio-800 hover:bg-gray-200 dark:hover:bg-studio-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-studio-700 rounded-md font-medium cursor-pointer transition flex items-center justify-center space-x-1">
+                            <i class="fa-solid fa-upload"></i>
+                            <span>복원하기</span>
+                            <input type="file" id="inputRestoreImport" accept=".json" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200 dark:border-studio-800">
+
+                <div>
+                    <button id="btnClearAllData" class="w-full py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-md font-medium transition">
+                        전체 데이터 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE APPLICATION LOGIC -->
+    <script>
+        // State Management
+        let appState = {
+            notes: [],
+            openTabIds: [],
+            activeNoteId: null,
+            fontSize: 14,
+            fontFamily: 'sans',
+            theme: 'dark',
+            isWordWrap: true,
+            isMDPreview: false,
+            stickyContent: '',
+            filterCategory: 'all'
+        };
+
+        // Default Starter Notes
+        const starterNotes = [
+            {
+                id: 'note-welcome',
+                title: '환영합니다_시작가이드.md',
+                content: `# 📝 프로 스마트 메모장 스튜디오\n\n본 메모장 스튜디오는 **마크다운 문서 작성**, **아이디어 정리**, 그리고 **체계적인 노트 관리**에 특화된 초경량 고성능 웹 문서 환경입니다.\n\n### ⚡ 핵심 기능 모듈\n- **스플릿 미리보기 (나란히 보기)**: 상단 우측의 '나란히 보기' 버튼을 통해 마크다운의 결과를 실시간으로 렌더링하세요.\n- **서식 도구 모음**: 굵게, 기울임, 형광펜, 목록, 체크리스트, 표 등을 한 번의 클릭으로 입력 가능합니다.\n- **버전 스냅샷 이력**: 작성 중인 문서의 특정 시점 복사본을 스냅샷으로 보관하고 언제든 복원하세요.\n- **테마 & 폰트 커스텀**: 설정 메뉴에서 사이버펑크, 포레스트, 세피아 테마 및 명조/고딕/고정폭 폰트를 변경해 보세요.\n\n> *Tip: 상단 메뉴의 스티키 메모지를 활용하면 빠른 임시 메모를 항상 화면 위에 띄워둘 수 있습니다.*`,
+                lang: 'markdown',
+                isFav: true,
+                isTrash: false,
+                snapshots: [],
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'note-meeting',
+                title: '프로젝트_회의록_템플릿.md',
+                content: `# 📅 주간 프로젝트 회의록\n\n- **일시**: 2026년 10월 02일\n- **참석자**: 홍길동, 김철수, 이영희\n\n---\n\n### 🎯 금주 진행 안건\n1. [x] 신규 사용자 인터페이스 시안 검토\n2. [ ] 데이터 백업 파이프라인 안전성 테스트\n3. [ ] 모바일 반응형 터치 인터랙션 개선\n\n### 📌 결정 사항\n- 메인 폰트를 가독성이 높은 Inter 및 Noto Serif KR로 표준화\n- 문서의 실시간 자동 저장 간격을 최적화하여 쾌적한 렌더링 유지`,
+                lang: 'markdown',
+                isFav: false,
+                isTrash: false,
+                snapshots: [],
+                updatedAt: new Date().toISOString()
+            }
+        ];
+
+        // Starter Document Templates
+        const documentTemplates = [
+            {
+                name: '주간 업무 일지 템플릿',
+                lang: 'markdown',
+                desc: '업무 진행 상황, 금주 목표 및 블로커 정리용',
+                code: `# 📋 주간 업무 일지 (2026년 W--)\n\n## 1. 금주 주요 성과\n- \n- \n\n## 2. 진행 중인 과제\n- [ ] 과제 A: \n- [ ] 과제 B: \n\n## 3. 이슈 및 요청사항\n> `
+            },
+            {
+                name: '체크리스트 & To-Do 템플릿',
+                lang: 'markdown',
+                desc: '오늘의 할 일 관리 및 목표 달성 스케줄러',
+                code: `# 📌 오늘의 Todo List\n\n### 🔴 우선순위 높음\n- [ ] \n- [ ] \n\n### 🟡 일반 할 일\n- [ ] \n- [ ] \n\n### 🟢 아이디어 / 메모\n- `
+            },
+            {
+                name: '아이디어 기획안 템플릿',
+                lang: 'markdown',
+                desc: '신규 프로젝트 및 창의적인 컨셉 정리',
+                code: `# 💡 신규 아이디어 기획안\n\n### 1. 개요 및 목적\n\n\n### 2. 핵심 타겟층 및 니즈\n\n\n### 3. 주요 기능 명세\n| 기능명 | 내용 | 비고 |\n| :--- | :--- | :--- |\n| 기능 1 | | |\n| 기능 2 | | |`
+            }
+        ];
+
+        // DOM Elements Cache
+        const sidebar = document.getElementById('sidebar');
+        const fileTreeContainer = document.getElementById('fileTreeContainer');
+        const tabsBar = document.getElementById('tabsBar');
+        const mainTextarea = document.getElementById('mainTextarea');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const inputDocTitle = document.getElementById('inputDocTitle');
+        const selectDocLang = document.getElementById('selectDocLang');
+        const markdownPreviewPane = document.getElementById('markdownPreviewPane');
+        const stickyNoteOverlay = document.getElementById('stickyNoteOverlay');
+        const stickyNoteTextarea = document.getElementById('stickyNoteTextarea');
+
+        // Initialization
+        window.onload = function() {
+            loadFromStorage();
+            applyTheme(appState.theme);
+            applyFontFamily(appState.fontFamily);
+            setupEvents();
+            renderFileTree();
+            renderTabs();
+            
+            if (appState.notes.length > 0) {
+                const initialId = appState.activeNoteId || appState.notes[0].id;
+                openNoteInTab(initialId);
+            } else {
+                createNewNote();
+            }
+
+            updateLineNumbers();
+        };
+
+        // Storage Management
+        function loadFromStorage() {
+            const data = localStorage.getItem('ultra_notepad_workspace');
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    appState.notes = parsed.notes || starterNotes;
+                    appState.openTabIds = parsed.openTabIds || [appState.notes[0].id];
+                    appState.activeNoteId = parsed.activeNoteId || appState.notes[0].id;
+                    appState.fontSize = parsed.fontSize || 14;
+                    appState.fontFamily = parsed.fontFamily || 'sans';
+                    appState.theme = parsed.theme || 'dark';
+                    appState.stickyContent = parsed.stickyContent || '';
+                    stickyNoteTextarea.value = appState.stickyContent;
+
+                    document.getElementById('sliderFontSize').value = appState.fontSize;
+                    document.getElementById('lblFontSizeValue').textContent = appState.fontSize + 'px';
+                    document.getElementById('selectFontFamily').value = appState.fontFamily;
+                } catch(e) {
+                    appState.notes = starterNotes;
+                    appState.openTabIds = [starterNotes[0].id];
+                    appState.activeNoteId = starterNotes[0].id;
+                }
+            } else {
+                appState.notes = starterNotes;
+                appState.openTabIds = starterNotes.map(n => n.id);
+                appState.activeNoteId = starterNotes[0].id;
+            }
+        }
+
+        function saveToStorage() {
+            const dataToSave = {
+                notes: appState.notes,
+                openTabIds: appState.openTabIds,
+                activeNoteId: appState.activeNoteId,
+                fontSize: appState.fontSize,
+                fontFamily: appState.fontFamily,
+                theme: appState.theme,
+                stickyContent: appState.stickyContent
+            };
+            localStorage.setItem('ultra_notepad_workspace', JSON.stringify(dataToSave));
+            
+            const autoSaveLbl = document.getElementById('statusAutoSave');
+            autoSaveLbl.style.opacity = '1';
+        }
+
+        function getActiveNote() {
+            return appState.notes.find(n => n.id === appState.activeNoteId);
+        }
+
+        function createNewNote(title = '새 문서', content = '', lang = 'markdown') {
+            const newId = 'doc_' + Date.now();
+            const ext = lang === 'markdown' ? '.md' : '.txt';
+            const fullTitle = title.includes('.') ? title : `${title}${ext}`;
+
+            const newNote = {
+                id: newId,
+                title: fullTitle,
+                content: content,
+                lang: lang,
+                isFav: false,
+                isTrash: false,
+                snapshots: [],
+                updatedAt: new Date().toISOString()
+            };
+
+            appState.notes.unshift(newNote);
+            if (!appState.openTabIds.includes(newId)) {
+                appState.openTabIds.push(newId);
+            }
+            appState.activeNoteId = newId;
+
+            saveToStorage();
+            renderFileTree();
+            renderTabs();
+            loadActiveNoteToEditor();
+        }
+
+        function openNoteInTab(id) {
+            if (!appState.openTabIds.includes(id)) {
+                appState.openTabIds.push(id);
+            }
+            appState.activeNoteId = id;
+            saveToStorage();
+            renderTabs();
+            renderFileTree();
+            loadActiveNoteToEditor();
+        }
+
+        function closeTab(id, e) {
+            if (e) e.stopPropagation();
+            appState.openTabIds = appState.openTabIds.filter(tId => tId !== id);
+            
+            if (appState.activeNoteId === id) {
+                if (appState.openTabIds.length > 0) {
+                    appState.activeNoteId = appState.openTabIds[appState.openTabIds.length - 1];
+                } else {
+                    appState.activeNoteId = null;
+                }
+            }
+            saveToStorage();
+            renderTabs();
+            renderFileTree();
+            loadActiveNoteToEditor();
+        }
+
+        function renderTabs() {
+            tabsBar.innerHTML = '';
+            if (appState.openTabIds.length === 0) {
+                tabsBar.innerHTML = `<div class="p-2 text-xs text-gray-400 italic">열린 탭이 없습니다.</div>`;
+                return;
+            }
+
+            appState.openTabIds.forEach(id => {
+                const note = appState.notes.find(n => n.id === id);
+                if (!note) return;
+
+                const isActive = id === appState.activeNoteId;
+                const tabEl = document.createElement('div');
+                tabEl.className = `px-3 py-2 text-xs border-r border-gray-200 dark:border-studio-800 cursor-pointer flex items-center space-x-2 shrink-0 transition ${
+                    isActive 
+                    ? 'bg-white dark:bg-studio-950 font-bold text-blue-600 dark:text-blue-400 border-t-2 border-t-blue-500' 
+                    : 'bg-gray-100 dark:bg-studio-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-studio-800'
+                }`;
+
+                const icon = note.lang === 'markdown' ? 'fa-solid fa-file-lines text-purple-400' : 'fa-regular fa-file-lines text-gray-400';
+
+                tabEl.innerHTML = `
+                    <i class="${icon} text-[11px]"></i>
+                    <span class="max-w-[120px] truncate">${escapeHTML(note.title)}</span>
+                    <button class="btn-close-tab hover:text-red-500 rounded p-0.5 ml-1 transition"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                `;
+
+                tabEl.addEventListener('click', () => openNoteInTab(id));
+                tabEl.querySelector('.btn-close-tab').addEventListener('click', (e) => closeTab(id, e));
+                tabsBar.appendChild(tabEl);
+            });
+        }
+
+        function renderFileTree() {
+            fileTreeContainer.innerHTML = '';
+            const query = document.getElementById('inputSearchNotes').value.toLowerCase();
+
+            let filtered = appState.notes.filter(n => {
+                const matchesQuery = n.title.toLowerCase().includes(query) || n.content.toLowerCase().includes(query);
+                if (appState.filterCategory === 'trash') return matchesQuery && n.isTrash;
+                if (n.isTrash) return false;
+
+                if (appState.filterCategory === 'fav') return matchesQuery && n.isFav;
+                if (appState.filterCategory === 'markdown') return matchesQuery && n.lang === 'markdown';
+                return matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                fileTreeContainer.innerHTML = `<div class="p-4 text-center text-xs text-gray-400">일치하는 문서가 없습니다.</div>`;
+                return;
+            }
+
+            filtered.forEach(note => {
+                const isActive = note.id === appState.activeNoteId;
+                const item = document.createElement('div');
+                item.className = `p-2 rounded-lg cursor-pointer text-xs flex items-center justify-between group transition ${
+                    isActive 
+                    ? 'bg-blue-500/10 text-blue-500 font-semibold border border-blue-500/20' 
+                    : 'hover:bg-gray-100 dark:hover:bg-studio-800/60 text-gray-700 dark:text-gray-300'
+                }`;
+
+                const icon = note.lang === 'markdown' ? 'fa-solid fa-file-lines text-purple-400' : 'fa-regular fa-file-lines text-gray-400';
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate">
+                        <i class="${icon}"></i>
+                        <span class="truncate">${escapeHTML(note.title)}</span>
+                    </div>
+                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition">
+                        ${!note.isTrash ? `
+                            <button class="btn-fav-item p-1 hover:text-amber-400 ${note.isFav ? 'text-amber-400 opacity-100' : 'text-gray-400'}"><i class="fa-${note.isFav ? 'solid' : 'regular'} fa-star"></i></button>
+                        ` : `
+                            <button class="btn-restore-item p-1 text-emerald-400 hover:text-emerald-300" title="복원"><i class="fa-solid fa-rotate-left"></i></button>
+                        `}
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    if (!note.isTrash) openNoteInTab(note.id);
+                });
+
+                if (!note.isTrash) {
+                    item.querySelector('.btn-fav-item').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        note.isFav = !note.isFav;
+                        saveToStorage();
+                        renderFileTree();
+                        if (note.id === appState.activeNoteId) updateFavStarUI(note.isFav);
+                    });
+                } else {
+                    item.querySelector('.btn-restore-item').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        note.isTrash = false;
+                        saveToStorage();
+                        renderFileTree();
+                    });
+                }
+
+                fileTreeContainer.appendChild(item);
+            });
+        }
+
+        function loadActiveNoteToEditor() {
+            const note = getActiveNote();
+            if (!note) {
+                mainTextarea.value = '';
+                inputDocTitle.value = '';
+                return;
+            }
+
+            inputDocTitle.value = note.title;
+            mainTextarea.value = note.content;
+            selectDocLang.value = note.lang;
+
+            document.getElementById('statusLangName').textContent = note.lang.toUpperCase();
+            updateFavStarUI(note.isFav);
+            updateLineNumbers();
+            updateEditorStats();
+
+            if (appState.isMDPreview) {
+                renderMarkdownPreview();
+            }
+        }
+
+        function updateFavStarUI(isFav) {
+            const star = document.getElementById('starIcon');
+            star.className = isFav ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star';
+        }
+
+        function updateLineNumbers() {
+            const lines = mainTextarea.value.split('\n').length;
+            let numbersHtml = '';
+            for (let i = 1; i <= lines; i++) {
+                numbersHtml += i + '<br>';
+            }
+            lineNumbers.innerHTML = numbersHtml;
+        }
+
+        function updateEditorStats() {
+            const text = mainTextarea.value;
+            const chars = text.length;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            
+            const cursorPos = mainTextarea.selectionStart;
+            const textBeforeCursor = text.substring(0, cursorPos);
+            const currLine = textBeforeCursor.split('\n').length;
+            const currCol = textBeforeCursor.length - textBeforeCursor.lastIndexOf('\n');
+
+            document.getElementById('statPosition').innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i> <span>줄 ${currLine}, 열 ${currCol}</span>`;
+            document.getElementById('statChars').textContent = `${chars} 글자`;
+            document.getElementById('statWords').textContent = `${words} 단어`;
+            
+            const readMinutes = Math.max(1, Math.ceil(words / 200));
+            document.getElementById('statReadTime').textContent = `읽기 ~${readMinutes}분`;
+        }
+
+        // Formatting Helpers
+        function applyFormatting(type) {
+            const start = mainTextarea.selectionStart;
+            const end = mainTextarea.selectionEnd;
+            const selected = mainTextarea.value.substring(start, end);
+            let replacement = '';
+
+            switch(type) {
+                case 'h1': replacement = `# ${selected || '제목 1'}`; break;
+                case 'h2': replacement = `## ${selected || '제목 2'}`; break;
+                case 'bold': replacement = `**${selected || '굵은 텍스트'}**`; break;
+                case 'italic': replacement = `*${selected || '기울임 텍스트'}*`; break;
+                case 'strike': replacement = `~~${selected || '취소선 텍스트'}~~`; break;
+                case 'highlight': replacement = `==${selected || '강조 텍스트'}==`; break;
+                case 'ul': replacement = `- ${selected || '목록 항목'}`; break;
+                case 'ol': replacement = `1. ${selected || '목록 항목'}`; break;
+                case 'check': replacement = `- [ ] ${selected || '할 일 항목'}`; break;
+                case 'quote': replacement = `> ${selected || '인용문 데이터'}`; break;
+                case 'table': replacement = `\n| 항목 | 내용 |\n| :--- | :--- |\n| 데이터1 | 내용1 |\n`; break;
+                case 'hr': replacement = `\n---\n`; break;
+            }
+
+            mainTextarea.value = mainTextarea.value.substring(0, start) + replacement + mainTextarea.value.substring(end);
+            mainTextarea.selectionStart = mainTextarea.selectionEnd = start + replacement.length;
+            onEditorInput();
+        }
+
+        function onEditorInput() {
+            updateLineNumbers();
+            updateEditorStats();
+            
+            const note = getActiveNote();
+            if (note) {
+                note.content = mainTextarea.value;
+                note.updatedAt = new Date().toISOString();
+                saveToStorage();
+                
+                if (appState.isMDPreview) {
+                    renderMarkdownPreview();
+                }
+            }
+        }
+
+        mainTextarea.addEventListener('input', onEditorInput);
+        mainTextarea.addEventListener('keyup', updateEditorStats);
+        mainTextarea.addEventListener('click', updateEditorStats);
+
+        mainTextarea.addEventListener('scroll', function() {
+            lineNumbers.scrollTop = mainTextarea.scrollTop;
+        });
+
+        // Markdown Live Preview
+        function renderMarkdownPreview() {
+            if (typeof marked !== 'undefined') {
+                markdownPreviewPane.innerHTML = marked.parse(mainTextarea.value);
+            }
+        }
+
+        // Theme and Font Applying
+        function applyTheme(themeName) {
+            appState.theme = themeName;
+            document.body.classList.remove('theme-cyberpunk', 'theme-forest', 'theme-sepia');
+            document.documentElement.classList.remove('dark');
+
+            if (themeName === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (themeName === 'light') {
+                // Default Light Mode
+            } else {
+                document.body.classList.add(`theme-${themeName}`);
+            }
+            saveToStorage();
+        }
+
+        function applyFontFamily(font) {
+            appState.fontFamily = font;
+            mainTextarea.classList.remove('font-sans', 'font-mono', 'font-serif');
+            if (font === 'mono') mainTextarea.classList.add('font-mono');
+            else if (font === 'serif') mainTextarea.classList.add('font-serif');
+            else mainTextarea.classList.add('font-sans');
+            saveToStorage();
+        }
+
+        // Setup All Event Listeners
+        function setupEvents() {
+            document.getElementById('btnNewNote').addEventListener('click', () => createNewNote());
+            document.getElementById('btnSidebarNewNote').addEventListener('click', () => createNewNote());
+            document.getElementById('btnSaveCurrent').addEventListener('click', () => {
+                saveToStorage();
+                alert('현재 노트가 안전하게 저장되었습니다.');
+            });
+
+            // Formatting Buttons
+            document.querySelectorAll('.fmt-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyFormatting(btn.dataset.fmt));
+            });
+
+            // Document Title & Lang
+            inputDocTitle.addEventListener('input', () => {
+                const note = getActiveNote();
+                if (note) {
+                    note.title = inputDocTitle.value;
+                    saveToStorage();
+                    renderTabs();
+                    renderFileTree();
+                }
+            });
+
+            selectDocLang.addEventListener('change', () => {
+                const note = getActiveNote();
+                if (note) {
+                    note.lang = selectDocLang.value;
+                    document.getElementById('statusLangName').textContent = note.lang.toUpperCase();
+                    saveToStorage();
+                    renderTabs();
+                    renderFileTree();
+                }
+            });
+
+            document.getElementById('btnFavToggle').addEventListener('click', () => {
+                const note = getActiveNote();
+                if (note) {
+                    note.isFav = !note.isFav;
+                    updateFavStarUI(note.isFav);
+                    saveToStorage();
+                    renderFileTree();
+                }
+            });
+
+            document.getElementById('btnDeleteFile').addEventListener('click', () => {
+                const note = getActiveNote();
+                if (!note) return;
+                if (confirm('이 문서를 휴지통으로 이동하시겠습니까?')) {
+                    note.isTrash = true;
+                    closeTab(note.id);
+                    saveToStorage();
+                    renderFileTree();
+                }
+            });
+
+            // Word Wrap Toggle
+            document.getElementById('btnToggleWordWrap').addEventListener('click', () => {
+                appState.isWordWrap = !appState.isWordWrap;
+                if (appState.isWordWrap) {
+                    mainTextarea.classList.remove('whitespace-pre');
+                    mainTextarea.classList.add('whitespace-pre-wrap');
+                    document.getElementById('lblWrapText').textContent = '줄바꿈';
+                } else {
+                    mainTextarea.classList.remove('whitespace-pre-wrap');
+                    mainTextarea.classList.add('whitespace-pre');
+                    document.getElementById('lblWrapText').textContent = '직선';
+                }
+            });
+
+            // Split View Toggle
+            document.getElementById('btnToggleMDPreview').addEventListener('click', () => {
+                appState.isMDPreview = !appState.isMDPreview;
+                if (appState.isMDPreview) {
+                    markdownPreviewPane.classList.remove('hidden');
+                    document.getElementById('editorPanel').classList.add('w-1/2');
+                    renderMarkdownPreview();
+                } else {
+                    markdownPreviewPane.classList.add('hidden');
+                    document.getElementById('editorPanel').classList.remove('w-1/2');
+                }
+            });
+
+            // Sidebar Filters
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active-filter', 'bg-blue-500/10', 'text-blue-500', 'border', 'border-blue-500/20'));
+                    btn.classList.add('active-filter', 'bg-blue-500/10', 'text-blue-500', 'border', 'border-blue-500/20');
+                    appState.filterCategory = btn.dataset.filter;
+                    renderFileTree();
+                });
+            });
+
+            document.getElementById('inputSearchNotes').addEventListener('input', renderFileTree);
+
+            // Toggle Sidebar
+            document.getElementById('btnToggleSidebar').addEventListener('click', () => {
+                sidebar.classList.toggle('-ml-80');
+            });
+
+            // Zen Mode
+            document.getElementById('btnZenMode').addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            // Sticky Note Overlay
+            document.getElementById('btnToggleSticky').addEventListener('click', () => {
+                stickyNoteOverlay.classList.toggle('hidden');
+            });
+            document.getElementById('btnCloseSticky').addEventListener('click', () => {
+                stickyNoteOverlay.classList.add('hidden');
+            });
+            stickyNoteTextarea.addEventListener('input', () => {
+                appState.stickyContent = stickyNoteTextarea.value;
+                saveToStorage();
+            });
+
+            // Snapshots / Version History Modal
+            document.getElementById('btnSnapshots').addEventListener('click', openSnapshotsModal);
+            document.getElementById('btnCreateSnapshot').addEventListener('click', () => {
+                const note = getActiveNote();
+                if (!note) return;
+                if (!note.snapshots) note.snapshots = [];
+                note.snapshots.unshift({
+                    id: 'snap_' + Date.now(),
+                    content: note.content,
+                    timestamp: new Date().toLocaleString()
+                });
+                saveToStorage();
+                openSnapshotsModal();
+            });
+
+            // Modals Logic
+            document.getElementById('btnOpenTemplates').addEventListener('click', openTemplatesModal);
+            document.getElementById('btnSettings').addEventListener('click', () => {
+                document.getElementById('settingsModal').classList.remove('hidden');
+            });
+
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('snippetModal').classList.add('hidden');
+                    document.getElementById('snapshotsModal').classList.add('hidden');
+                    document.getElementById('settingsModal').classList.add('hidden');
+                });
+            });
+
+            // Settings Modal Inputs
+            document.getElementById('sliderFontSize').addEventListener('input', (e) => {
+                appState.fontSize = parseInt(e.target.value);
+                mainTextarea.style.fontSize = appState.fontSize + 'px';
+                lineNumbers.style.fontSize = appState.fontSize + 'px';
+                document.getElementById('lblFontSizeValue').textContent = appState.fontSize + 'px';
+                saveToStorage();
+            });
+
+            document.getElementById('selectFontFamily').addEventListener('change', (e) => {
+                applyFontFamily(e.target.value);
+            });
+
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+            });
+
+            // Export & Import
+            document.getElementById('btnExportFile').addEventListener('click', exportCurrentFile);
+            document.getElementById('inputFileImport').addEventListener('change', importSingleFile);
+
+            document.getElementById('btnBackupExport').addEventListener('click', () => {
+                const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+                downloadBlob(blob, `notepad_backup_${Date.now()}.json`);
+            });
+
+            document.getElementById('inputRestoreImport').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    try {
+                        const importedState = JSON.parse(evt.target.result);
+                        if (importedState.notes) {
+                            appState = importedState;
+                            saveToStorage();
+                            location.reload();
+                        }
+                    } catch(err) {
+                        alert('올바르지 않은 백업 데이터 포맷입니다.');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            document.getElementById('btnClearAllData').addEventListener('click', () => {
+                if (confirm('모든 노트 데이터와 설정이 초기화됩니다. 계속하시겠습니까?')) {
+                    localStorage.removeItem('ultra_notepad_workspace');
+                    location.reload();
+                }
+            });
+
+            // Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveToStorage();
+                } else if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                    e.preventDefault();
+                    applyFormatting('bold');
+                } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+                    e.preventDefault();
+                    applyFormatting('italic');
+                }
+            });
+        }
+
+        // Templates Modal
+        function openTemplatesModal() {
+            const list = document.getElementById('snippetList');
+            list.innerHTML = '';
+
+            documentTemplates.forEach(tp => {
+                const item = document.createElement('div');
+                item.className = 'p-3 border border-gray-200 dark:border-studio-800 rounded-lg hover:border-purple-500 cursor-pointer transition';
+                item.innerHTML = `
+                    <div class="font-bold text-xs text-gray-800 dark:text-gray-200 flex justify-between items-center mb-1">
+                        <span>${escapeHTML(tp.name)}</span>
+                        <span class="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded font-mono">${tp.lang}</span>
+                    </div>
+                    <div class="text-[11px] text-gray-400">${escapeHTML(tp.desc)}</div>
+                `;
+                item.addEventListener('click', () => {
+                    createNewNote(tp.name, tp.code, tp.lang);
+                    document.getElementById('snippetModal').classList.add('hidden');
+                });
+                list.appendChild(item);
+            });
+
+            document.getElementById('snippetModal').classList.remove('hidden');
+        }
+
+        // Snapshots Modal
+        function openSnapshotsModal() {
+            const note = getActiveNote();
+            if (!note) return;
+            const list = document.getElementById('snapshotList');
+            list.innerHTML = '';
+
+            if (!note.snapshots || note.snapshots.length === 0) {
+                list.innerHTML = `<div class="text-xs text-gray-400 italic text-center py-4">저장된 복원 시점이 없습니다.</div>`;
+            } else {
+                note.snapshots.forEach(snap => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2.5 border border-gray-200 dark:border-studio-800 rounded-lg flex justify-between items-center text-xs';
+                    item.innerHTML = `
+                        <div>
+                            <div class="font-bold text-gray-700 dark:text-gray-300">${snap.timestamp}</div>
+                            <div class="text-[10px] text-gray-400">${snap.content.length} 글자</div>
+                        </div>
+                        <button class="btn-restore-snap px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-[11px] transition">복원</button>
+                    `;
+                    item.querySelector('.btn-restore-snap').addEventListener('click', () => {
+                        note.content = snap.content;
+                        mainTextarea.value = snap.content;
+                        onEditorInput();
+                        document.getElementById('snapshotsModal').classList.add('hidden');
+                    });
+                    list.appendChild(item);
+                });
+            }
+
+            document.getElementById('snapshotsModal').classList.remove('hidden');
+        }
+
+        // File Helpers
+        function exportCurrentFile() {
+            const note = getActiveNote();
+            if (!note) return;
+            const blob = new Blob([note.content], { type: 'text/plain;charset=utf-8' });
+            downloadBlob(blob, note.title);
+        }
+
+        function importSingleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                const lang = ext === 'md' ? 'markdown' : 'plaintext';
+                createNewNote(file.name, evt.target.result, lang);
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.URL ? URL.createObjectURL(blob) : webkitURL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
